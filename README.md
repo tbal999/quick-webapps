@@ -1,5 +1,5 @@
 # tldr-webapp
-tiny webapp example
+tiny webapp example aimed at beginners to go
 
 This webapp makes use of the library: https://github.com/JesusIslam/tldr <-- a Text summarizer for golang using LexRank
 
