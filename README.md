@@ -8,7 +8,7 @@ I will use this as an example at the Brighton Gophers March meetup.
 The premise:
 
 1) You can make quick dirty web applications with go/html and minimal lines of code!
-2) You're new to programming but skilled enough to build useful tools for colleages / friends / yourself.
+2) You're still new to programming but skilled enough to build useful tools for colleagues / friends / yourself.
 3) You want to move away from the command line and create a simple but useful GUI.
 
 Meetup details:
