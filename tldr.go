@@ -138,7 +138,7 @@ func main() {
 			quit <- 1
 		}
 	}()
-	openbrowser("127.0.0.1:8080") //open browser (or tab) for the app automatically
+	openbrowser("http://127.0.0.1:8080") //open browser (or tab) for the app automatically
 	//block main from exiting until we've received a message from the quit channel.
 	select {
 	case _, ok := <-quit:
