@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os/exec"
+	"runtime"
 	"strconv"
 	"text/template"
 
@@ -70,7 +72,7 @@ func errorexists(err error, str string) bool {
 	return false
 }
 
-//the function that is called if we go to '/' handler on server.
+//the function that is invoked if we go to '/' handler on server.
 func startPage(w http.ResponseWriter, r *http.Request) {
 	t, err := template.New("homepage").Parse(homepage)
 	if errorexists(err, "template parse error: ") {
@@ -108,6 +110,24 @@ func collectDataFromForms(r *http.Request) (webPageVariables, bool) {
 	return blogpost, exit
 }
 
+//opens your default browser, depending on the OS you are on.
+func openbrowser(url string) {
+	var err error
+	switch runtime.GOOS {
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform????")
+	}
+	if err != nil {
+		log.Print(err)
+	}
+}
+
 func main() {
 	fmt.Println("Server started...") //signposting the server has started
 	http.HandleFunc("/", startPage)  //set up a http handler for the handle of '/' which will call function 'startPage'
@@ -118,6 +138,7 @@ func main() {
 			quit <- 1
 		}
 	}()
+	openbrowser("127.0.0.1:8080") //open browser (or tab) for the app automatically
 	//block main from exiting until we've received a message from the quit channel.
 	select {
 	case _, ok := <-quit:
