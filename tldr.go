@@ -22,7 +22,8 @@ var (
 	quit = make(chan bool, 1)
 	//the HTML for the front page
 	homepage = `
-		<!DOCTYPE html><html>
+		<!DOCTYPE html>
+		<html>
 		<head><title>TL;DR</title></head>
 		<body>
 		<form action="/doStuff" method="POST">
@@ -72,38 +73,10 @@ func errorExists(err error, str string) bool {
 	return false
 }
 
-//the function that is called if we go to '/' handler.
-func startPage(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("homepage").Parse(homepage)
-	if errorExists(err, "template parse error: ") {
-		quit <- true
-	}
-	err = t.Execute(w, pagevariables)
-	if errorExists(err, "template execute error: ") {
-		quit <- true
-	}
-}
-
-//the function that is called if we go to '/doStuff' handler.
-func doStuff(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("homepage").Parse(homepage)
-	if errorExists(err, "template parse error: ") {
-		quit <- true
-	}
-	exit := collectDataFromForms(r) //grab data from the input
-	err = t.Execute(w, pagevariables)
-	if errorExists(err, "template execute error: ") {
-		quit <- true
-	}
-	if exit {
-		quit <- true
-	}
-}
-
 //collect data from the forms in the http request
 func collectDataFromForms(r *http.Request) bool {
 	var exit bool
-	r.ParseForm()
+	r.ParseForm() //we parse the contents of the form
 	button := r.FormValue("submit")
 	switch button {
 	case "exit":
@@ -111,7 +84,7 @@ func collectDataFromForms(r *http.Request) bool {
 		pagevariables.Output = `GOODBYE!! Server has shut down... 
 you can close this window now!`
 	default:
-		if validate(r, "entertexthere") && validate(r, "title") {
+		if validate(r, "entertexthere") && validate(r, "title") { //if there's content in the text boxes...
 			integer, _ := strconv.Atoi(string(r.Form["title"][0][0]))
 			pagevariables.Output = tealDeer(integer, r.Form["entertexthere"][0])
 			log.Print(integer, " paragraph(s) to be generated") //log a text summary attempt
@@ -120,6 +93,34 @@ you can close this window now!`
 		}
 	}
 	return exit
+}
+
+//the function that is called if we go to '/doStuff' handler.
+func doStuff(w http.ResponseWriter, r *http.Request) {
+	t, err := template.New("homepage").Parse(homepage) //go templating package will parse the contents of the page variable
+	if errorExists(err, "template parse error: ") {
+		quit <- true
+	}
+	exit := collectDataFromForms(r)   //grab data from the input
+	err = t.Execute(w, pagevariables) //execute the template, but passing in the (now updated) page variables
+	if errorExists(err, "template execute error: ") {
+		quit <- true
+	}
+	if exit {
+		quit <- true
+	}
+}
+
+//the function that is called if we go to '/' handler.
+func startPage(w http.ResponseWriter, r *http.Request) {
+	t, err := template.New("homepage").Parse(homepage) //parse page
+	if errorExists(err, "template parse error: ") {
+		quit <- true
+	}
+	err = t.Execute(w, pagevariables) //execute with pagevariables (will be blank at start)
+	if errorExists(err, "template execute error: ") {
+		quit <- true //if we pass true via the quit channel, it will cause the app to exit
+	}
 }
 
 //opens your default browser, depending on the OS you are on.
@@ -140,11 +141,12 @@ func openBrowser(url string) {
 	}
 }
 
+//main goroutine
 func main() {
 	fmt.Println("Server started...")     //signposting the server has started
 	http.HandleFunc("/", startPage)      //set up a http handler for the handle of '/' which will call function 'startPage'
 	http.HandleFunc("/doStuff", doStuff) //set up a http handler for the handle of '/doStuff' which will call function 'doStuff'
-	//run the webserver in a go routine
+	//run the webserver in a seperate go routine
 	go func() {
 		err := http.ListenAndServe(":8080", nil) // setting up server on listening port 8080
 		if errorExists(err, "http server error: ") {
@@ -152,12 +154,13 @@ func main() {
 		}
 	}()
 	openBrowser("http://127.0.0.1:8080") //open browser (or tab) for the app automatically
-	//block main from exiting until we've received a message from the quit channel.
+	//block main goroutine from exiting until we've received a message from the quit channel.
 	select {
-	case _, ok := <-quit:
-		if ok {
+	case isTrue := <-quit: //if at any time we receive 'true' down the channel...
+		if isTrue {
 			fmt.Println("...Shutting down")
 			fmt.Println("Goodbye!")
+			//if we get here, it will now exit the main goroutine and shut down the app
 		}
 	}
 }
