@@ -27,7 +27,7 @@ var (
 		TL;DR >> paste in large amounts of text (limit 7000 chars) and this will try to summarize the information from that text.<br>
 		<br><input name="title" type="text" placeholder="length" value="1"><div>1 for smallest length, 2+ for more.</div>
 		<br>
-		<textarea id="area" maxlength="7000" name="blogentry" cols="50" rows="25" placeholder="content goes here">{{.Output}}</textarea>
+		<textarea id="area" maxlength="7000" name="entertexthere" cols="50" rows="25" placeholder="content goes here">{{.Output}}</textarea>
 		<br>
 		<button type="submit" name="submit" value="submitquery">Submit</button><button type="submit" name="submit" value="exit">Exit</button>
 		</form>
@@ -95,11 +95,14 @@ func collectDataFromForms(r *http.Request) (webPageVariables, bool) {
 	switch button {
 	case "exit":
 		exit = true
-		blogpost.Output = "GOODBYE!! Server has shut down..."
+		blogpost.Output = "GOODBYE!! Server has shut down... you can close this window!"
 	default:
-		if validate(r, "blogentry") && validate(r, "title") {
+		if validate(r, "entertexthere") && validate(r, "title") {
 			integer, _ := strconv.Atoi(string(r.Form["title"][0][0]))
-			blogpost.Output = tealdeer(integer, r.Form["blogentry"][0])
+			blogpost.Output = tealdeer(integer, r.Form["entertexthere"][0])
+			log.Print(integer, " paragraph to be generated") //log a text summary attempt
+		} else {
+			log.Print("? no content received") //log no content received
 		}
 	}
 	return blogpost, exit
@@ -110,7 +113,7 @@ func main() {
 	http.HandleFunc("/", startPage)  //set up a http handler for the handle of '/' which will call function 'startPage'
 	//run the webserver in a go routine
 	go func() {
-		err := http.ListenAndServe("ddd:8080", nil) // setting up server on listening port 8080
+		err := http.ListenAndServe(":8080", nil) // setting up server on listening port 8080
 		if errorexists(err, "http server error: ") {
 			quit <- 1
 		}
