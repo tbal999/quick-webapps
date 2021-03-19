@@ -70,7 +70,7 @@ func errorexists(err error, str string) bool {
 	return false
 }
 
-//the function that is invoked if we go to '/' handler on server.
+//the function that is called if we go to '/' handler on server.
 func startPage(w http.ResponseWriter, r *http.Request) {
 	t, err := template.New("homepage").Parse(homepage)
 	if errorexists(err, "template parse error: ") {
