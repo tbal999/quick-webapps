@@ -28,7 +28,7 @@ var (
 		<body>
 		<form action="/doStuff" method="POST">
 		TL;DR >> paste in large amounts of text (limit 7000 chars) and this will try to summarize the information from that text.<br>
-		<br><input name="title" type="text" placeholder="length" value="1"><div>1 for smallest length, 2+ for more.</div>
+		<br><input name="size" type="text" placeholder="length" value="1"><div>output size: 1 (smallest) - 10 (biggest)</div>
 		<br>
 		<textarea id="area" maxlength="7000" name="entertexthere" cols="50" rows="25" placeholder="content goes here">{{.Output}}</textarea>
 		<br>
@@ -84,10 +84,13 @@ func collectDataFromForms(r *http.Request) bool {
 		pagevariables.Output = `GOODBYE!! Server has shut down... 
 you can close this window now!`
 	default:
-		if validate(r, "entertexthere") && validate(r, "title") { //if there's content in the text boxes...
-			integer, _ := strconv.Atoi(string(r.Form["title"][0][0]))
+		if validate(r, "entertexthere") && validate(r, "size") { //if there's content in the text boxes...
+			integer, _ := strconv.Atoi(string(r.Form["size"][0])) //if it's not a number just refresh page as var will just be 0
+			if integer > 10 {                                     //limit the size!
+				integer = 10
+			}
 			pagevariables.Output = tealDeer(integer, r.Form["entertexthere"][0])
-			log.Print(integer, " paragraph(s) to be generated") //log a text summary attempt
+			log.Print(integer, " size to be generated") //log a text summary attempt
 		} else {
 			log.Print("? no content received") //log no content received
 		}
