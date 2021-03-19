@@ -18,7 +18,7 @@ var page = `
 		<html>
 		<body>
 		<form action="/" method="POST">
-		<input name="input" type="text" placeholder="type here!"> ` + //the name lets you validate the input if this text input box
+		<input name="input" type="text" placeholder="type here!"> ` + //the name lets you validate the input of this text input box
 	`
 		<button type="submit" name="submit" value="submitquery">Submit</button>
 		</form>
