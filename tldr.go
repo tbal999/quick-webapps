@@ -64,26 +64,17 @@ func validate(r *http.Request, item string) bool {
 	return false
 }
 
-//if the error is not nil print error and handle
-func errorExists(err error, str string) bool {
-	if err != nil {
-		log.Print(str, err) //log it
-		return true
-	}
-	return false
-}
-
 //collect data from the forms in the http request
 func collectDataFromForms(r *http.Request) bool {
 	var exit bool
-	r.ParseForm() //we parse the contents of the form
-	button := r.FormValue("submit")
+	r.ParseForm()                   //we parse the contents of the form
+	button := r.FormValue("submit") //grab the button name so we can decide next action
 	switch button {
-	case "exit":
+	case "exit": //if you click on 'exit' button?
 		exit = true
-		pagevariables.Output = `GOODBYE!! Server has shut down... 
+		pagevariables.Output = `GOODBYE!! Server will shut down... 
 you can close this window now!`
-	default:
+	default: //there is only one other button so we can use default...
 		if validate(r, "entertexthere") && validate(r, "size") { //if there's content in the text boxes...
 			integer, _ := strconv.Atoi(string(r.Form["size"][0])) //if it's not a number just refresh page as var will just be 0
 			if integer > 10 {                                     //limit the size!
@@ -104,12 +95,12 @@ func doStuff(w http.ResponseWriter, r *http.Request) {
 	if errorExists(err, "template parse error: ") {
 		quit <- true
 	}
-	exit := collectDataFromForms(r)   //grab data from the input
+	exit := collectDataFromForms(r)   //grab data from the input (and return a bool)
 	err = t.Execute(w, pagevariables) //execute the template, but passing in the (now updated) page variables
 	if errorExists(err, "template execute error: ") {
 		quit <- true
 	}
-	if exit {
+	if exit { //if the 'exit' bool is true, we want to quit the server
 		quit <- true
 	}
 }
@@ -142,6 +133,15 @@ func openBrowser(url string) {
 	if err != nil {
 		log.Print(err)
 	}
+}
+
+//if the error is not nil print error and handle it (tiny bit less errorcode everywhere)
+func errorExists(err error, str string) bool {
+	if err != nil {
+		log.Print(str, err) //log it
+		return true
+	}
+	return false
 }
 
 //main goroutine
