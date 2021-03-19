@@ -12,20 +12,20 @@ import (
 	"github.com/JesusIslam/tldr" //Text summarizer for golang using LexRank by Andida Syahendar
 )
 
-//variables for the home page - just the one for today!
-type webPageVariables struct {
+//variables for the home page - just the one!
+var pagevariables = struct {
 	Output string
-}
+}{}
 
 var (
-	//channel to quit the server
-	quit = make(chan int, 1)
+	//bool channel to quit the server with a buffer of 1 (we only need 1!)
+	quit = make(chan bool, 1)
 	//the HTML for the front page
 	homepage = `
 		<!DOCTYPE html><html>
 		<head><title>TL;DR</title></head>
 		<body>
-		<form action="/" method="POST">
+		<form action="/doStuff" method="POST">
 		TL;DR >> paste in large amounts of text (limit 7000 chars) and this will try to summarize the information from that text.<br>
 		<br><input name="title" type="text" placeholder="length" value="1"><div>1 for smallest length, 2+ for more.</div>
 		<br>
@@ -39,14 +39,14 @@ var (
 )
 
 //function that summarizes text and returns a list of paragraphs.
-func tealdeer(sentencecount int, input string) (paragraphs string) {
+func tealDeer(sentencecount int, input string) (paragraphs string) {
 	bag := tldr.New()
 	output, err := bag.Summarize(input, sentencecount)
 	if err != nil {
 		fmt.Println(err)
 	}
 	for index := range output {
-		if index != len(output) {
+		if index < len(output)-1 {
 			paragraphs += output[index] + "\n\n"
 		} else {
 			paragraphs += output[index]
@@ -64,7 +64,7 @@ func validate(r *http.Request, item string) bool {
 }
 
 //if the error is not nil print error and handle
-func errorexists(err error, str string) bool {
+func errorExists(err error, str string) bool {
 	if err != nil {
 		log.Print(str, err) //log it
 		return true
@@ -72,46 +72,58 @@ func errorexists(err error, str string) bool {
 	return false
 }
 
-//the function that is invoked if we go to '/' handler on server.
+//the function that is called if we go to '/' handler.
 func startPage(w http.ResponseWriter, r *http.Request) {
 	t, err := template.New("homepage").Parse(homepage)
-	if errorexists(err, "template parse error: ") {
-		quit <- 1
+	if errorExists(err, "template parse error: ") {
+		quit <- true
 	}
-	pagevariables, exit := collectDataFromForms(r)
 	err = t.Execute(w, pagevariables)
-	if errorexists(err, "template execute error: ") {
-		quit <- 1
+	if errorExists(err, "template execute error: ") {
+		quit <- true
+	}
+}
+
+//the function that is called if we go to '/doStuff' handler.
+func doStuff(w http.ResponseWriter, r *http.Request) {
+	t, err := template.New("homepage").Parse(homepage)
+	if errorExists(err, "template parse error: ") {
+		quit <- true
+	}
+	exit := collectDataFromForms(r) //grab data from the input
+	err = t.Execute(w, pagevariables)
+	if errorExists(err, "template execute error: ") {
+		quit <- true
 	}
 	if exit {
-		quit <- 1
+		quit <- true
 	}
 }
 
 //collect data from the forms in the http request
-func collectDataFromForms(r *http.Request) (webPageVariables, bool) {
+func collectDataFromForms(r *http.Request) bool {
 	var exit bool
-	blogpost := webPageVariables{}
 	r.ParseForm()
 	button := r.FormValue("submit")
 	switch button {
 	case "exit":
 		exit = true
-		blogpost.Output = "GOODBYE!! Server has shut down... you can close this window!"
+		pagevariables.Output = `GOODBYE!! Server has shut down... 
+you can close this window now!`
 	default:
 		if validate(r, "entertexthere") && validate(r, "title") {
 			integer, _ := strconv.Atoi(string(r.Form["title"][0][0]))
-			blogpost.Output = tealdeer(integer, r.Form["entertexthere"][0])
-			log.Print(integer, " paragraph to be generated") //log a text summary attempt
+			pagevariables.Output = tealDeer(integer, r.Form["entertexthere"][0])
+			log.Print(integer, " paragraph(s) to be generated") //log a text summary attempt
 		} else {
 			log.Print("? no content received") //log no content received
 		}
 	}
-	return blogpost, exit
+	return exit
 }
 
 //opens your default browser, depending on the OS you are on.
-func openbrowser(url string) {
+func openBrowser(url string) {
 	var err error
 	switch runtime.GOOS {
 	case "linux":
@@ -129,20 +141,22 @@ func openbrowser(url string) {
 }
 
 func main() {
-	fmt.Println("Server started...") //signposting the server has started
-	http.HandleFunc("/", startPage)  //set up a http handler for the handle of '/' which will call function 'startPage'
+	fmt.Println("Server started...")     //signposting the server has started
+	http.HandleFunc("/", startPage)      //set up a http handler for the handle of '/' which will call function 'startPage'
+	http.HandleFunc("/doStuff", doStuff) //set up a http handler for the handle of '/doStuff' which will call function 'doStuff'
 	//run the webserver in a go routine
 	go func() {
 		err := http.ListenAndServe(":8080", nil) // setting up server on listening port 8080
-		if errorexists(err, "http server error: ") {
-			quit <- 1
+		if errorExists(err, "http server error: ") {
+			quit <- true
 		}
 	}()
-	openbrowser("http://127.0.0.1:8080") //open browser (or tab) for the app automatically
+	openBrowser("http://127.0.0.1:8080") //open browser (or tab) for the app automatically
 	//block main from exiting until we've received a message from the quit channel.
 	select {
 	case _, ok := <-quit:
 		if ok {
+			fmt.Println("...Shutting down")
 			fmt.Println("Goodbye!")
 		}
 	}
