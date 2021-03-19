@@ -1,6 +1,8 @@
 # quick webapps!
 Tiny webapp examples aimed at beginners to Go.
+
 One of the examples makes use of this library: https://github.com/JesusIslam/tldr <-- a Text summarizer for golang using LexRank.
+
 I will use this as an example at the Brighton Gophers March meetup.
 
 The premise:
