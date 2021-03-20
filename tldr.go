@@ -137,7 +137,7 @@ func openBrowser(url string) {
 	}
 }
 
-//if the error is not nil print error and handle it (tiny bit less errorcode everywhere)
+//if the error is not nil print error and handle it
 func errorExists(err error, str string) bool {
 	if err != nil {
 		log.Print(str, err) //log it
