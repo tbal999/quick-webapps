@@ -158,7 +158,7 @@ func waitForQuit() {
 	}
 }
 
-//start up a HHTP server
+//start up a HTTP server
 func startHTTPServer(port string) {
 	err := http.ListenAndServe(":"+port, nil) //setting up server on listening port
 	if errorExists(err, "http server error: ") {
