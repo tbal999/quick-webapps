@@ -143,6 +143,7 @@ func errorExists(err error, str string) bool {
 	return false
 }
 
+//wait for the message from the quit channel
 func waitForQuit() {
 	select {
 	case isTrue := <-quit: //if we receive a message from channel
@@ -154,6 +155,7 @@ func waitForQuit() {
 	}
 }
 
+//start up a HHTP server
 func startHTTPServer(port string) {
 	err := http.ListenAndServe(":"+port, nil) //setting up server on listening port
 	if errorExists(err, "http server error: ") {
