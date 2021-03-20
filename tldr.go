@@ -38,9 +38,10 @@ var (
 	`
 )
 
-//TLDR function that summarizes text and returns a list of paragraphs.
-//just an interesting library. you could do anything really but this is an example app.
-func tealDeer(sentencecount int, input string) (paragraphs string) {
+//TLDR function that returns a summary of some text & then length of the input string in characters
+//I chose TLDR because it's an interesting library but really you could do anything, this is an example app.
+func tealDeer(sentencecount int, input string) (paragraphs string, length int) {
+	length = len(input)
 	bag := tldr.New()
 	output, err := bag.Summarize(input, sentencecount)
 	if err != nil {
@@ -76,12 +77,13 @@ func collectDataFromForms(r *http.Request) bool {
 you can close this window now!`
 	default: //there is only one other button so we can use default...
 		if validate(r, "entertexthere") && validate(r, "size") { //if there's content in the text boxes...
-			integer, _ := strconv.Atoi(string(r.Form["size"][0])) //if it's not a number just refresh page as var will just be 0
-			if integer > 10 {                                     //limit the size!
-				integer = 10
+			size, _ := strconv.Atoi(string(r.Form["size"][0])) //if it's not a number just refresh page as var will just be 0
+			if size > 10 {                                     //limit the size!
+				size = 10
 			}
-			pagevariables.Output = tealDeer(integer, r.Form["entertexthere"][0])
-			log.Print(integer, " size to be generated") //log a text summary attempt
+			var contentlength int
+			pagevariables.Output, contentlength = tealDeer(size, r.Form["entertexthere"][0])
+			log.Printf("%d char input >> %d char output\n", contentlength, len(pagevariables.Output)) //log a text summary attempt
 		} else {
 			log.Print("? no content received") //log no content received
 		}
