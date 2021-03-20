@@ -12,16 +12,15 @@ import (
 	"github.com/JesusIslam/tldr" //Text summarizer for golang using LexRank by Andida Syahendar
 )
 
-//variables for the home page - just the one!
+//variables for the home page
 var pagevariables = struct {
 	Output string
 }{}
 
 var (
-	//bool channel to quit the server with a buffer of 1 (we only need 1!)
-	quit = make(chan bool, 1)
-	//the HTML for the front page
-	homepage = `
+	quit     = make(chan bool, 1) //bool channel to quit the server with a buffer of 1 (we only need 1!)
+	homepage =                    //some HTML for the front page
+	` 
 		<!DOCTYPE html>
 		<html>
 		<head><title>TL;DR</title></head>
@@ -36,10 +35,10 @@ var (
 		</form>
 		</body>
 		</html>
-`
+	`
 )
 
-//function that summarizes text and returns a list of paragraphs.
+//TLDR function that summarizes text and returns a list of paragraphs.
 func tealDeer(sentencecount int, input string) (paragraphs string) {
 	bag := tldr.New()
 	output, err := bag.Summarize(input, sentencecount)
@@ -91,7 +90,7 @@ you can close this window now!`
 
 //the function that is called if we go to '/doStuff' handler.
 func doStuff(w http.ResponseWriter, r *http.Request) {
-	t, err := template.New("homepage").Parse(homepage) //go templating package will parse the contents of the page variable
+	t, err := template.New("homepage").Parse(homepage) //parse the contents of the page variable
 	if errorExists(err, "template parse error: ") {
 		quit <- true
 	}
@@ -117,7 +116,7 @@ func startPage(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//opens your default browser, depending on the OS you are on.
+//open up browser/tab dependent on your OS.
 func openBrowser(url string) {
 	var err error
 	switch runtime.GOOS {
@@ -146,29 +145,28 @@ func errorExists(err error, str string) bool {
 
 func waitForQuit() {
 	select {
-	case isTrue := <-quit: //if at any time we receive 'true' down the channel...
-		if isTrue {
+	case isTrue := <-quit: //if we receive a message from channel
+		if isTrue { //if we receive 'true' down the channel...
 			fmt.Println("...Shutting down")
 			fmt.Println("Goodbye!")
-			return
-			//if we get here, it will now exit the main goroutine and shut down the app
+			return //if we get here, it will exit to the main goroutine and shut down the app
 		}
 	}
 }
 
-//main goroutine
+func startHTTPServer(port string) {
+	err := http.ListenAndServe(":"+port, nil) //setting up server on listening port
+	if errorExists(err, "http server error: ") {
+		quit <- true
+	}
+}
+
+//main function
 func main() {
-	fmt.Println("Server started...")     //signposting that the server has started
+	fmt.Println("Server started...")     //signpost that the server has started
 	http.HandleFunc("/", startPage)      //set up a http handler for the handle of '/' which will call function 'startPage'
-	http.HandleFunc("/doStuff", doStuff) //set up a http handler for the handle of '/doStuff' which will call function 'doStuff'
-	//run the webserver in a seperate go routine
-	go func() {
-		err := http.ListenAndServe(":8080", nil) // setting up server on listening port 8080
-		if errorExists(err, "http server error: ") {
-			quit <- true
-		}
-	}()
-	openBrowser("http://127.0.0.1:8080")
-	//block main goroutine from exiting until we've received a message from the quit channel.
-	waitForQuit()
+	http.HandleFunc("/doStuff", doStuff) //
+	go startHTTPServer("8080")           //run a local http server on a seperate go routine on port 8080
+	openBrowser("http://127.0.0.1:8080") //open a browser or tab automatically to go to the GUI
+	waitForQuit()                        //block main goroutine from exiting until we've received a message from the quit channel.
 }
