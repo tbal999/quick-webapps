@@ -39,6 +39,7 @@ var (
 )
 
 //TLDR function that summarizes text and returns a list of paragraphs.
+//just an interesting library. you could do anything really but this is an example app.
 func tealDeer(sentencecount int, input string) (paragraphs string) {
 	bag := tldr.New()
 	output, err := bag.Summarize(input, sentencecount)
