@@ -144,9 +144,21 @@ func errorExists(err error, str string) bool {
 	return false
 }
 
+func waitForQuit() {
+	select {
+	case isTrue := <-quit: //if at any time we receive 'true' down the channel...
+		if isTrue {
+			fmt.Println("...Shutting down")
+			fmt.Println("Goodbye!")
+			return
+			//if we get here, it will now exit the main goroutine and shut down the app
+		}
+	}
+}
+
 //main goroutine
 func main() {
-	fmt.Println("Server started...")     //signposting the server has started
+	fmt.Println("Server started...")     //signposting that the server has started
 	http.HandleFunc("/", startPage)      //set up a http handler for the handle of '/' which will call function 'startPage'
 	http.HandleFunc("/doStuff", doStuff) //set up a http handler for the handle of '/doStuff' which will call function 'doStuff'
 	//run the webserver in a seperate go routine
@@ -156,14 +168,7 @@ func main() {
 			quit <- true
 		}
 	}()
-	openBrowser("http://127.0.0.1:8080") //open browser (or tab) for the app automatically
+	openBrowser("http://127.0.0.1:8080")
 	//block main goroutine from exiting until we've received a message from the quit channel.
-	select {
-	case isTrue := <-quit: //if at any time we receive 'true' down the channel...
-		if isTrue {
-			fmt.Println("...Shutting down")
-			fmt.Println("Goodbye!")
-			//if we get here, it will now exit the main goroutine and shut down the app
-		}
-	}
+	waitForQuit()
 }
