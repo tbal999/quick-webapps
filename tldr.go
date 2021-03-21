@@ -178,10 +178,10 @@ func waitForQuit() {
 
 //main function
 func main() {
-	fmt.Println("Server started...")     //signpost that the server has started
-	http.HandleFunc("/", startPage)      //set up a http handler for the handle of '/' which will call function 'startPage'
-	http.HandleFunc("/doStuff", doStuff) //
-	go startHTTPServer("8080")           //run a local http server on a seperate go routine on port 8080
-	openBrowser("http://127.0.0.1:8080") //open a browser or tab automatically to go to the GUI
-	waitForQuit()                        //block main goroutine from exiting until we've received a message from the quit channel.
+	fmt.Println("Server started... (ctrl-c to exit)") //signpost that the server has started
+	http.HandleFunc("/", startPage)                   //set up a http handler for the handle of '/' which will call function 'startPage'
+	http.HandleFunc("/doStuff", doStuff)              //
+	go startHTTPServer("8080")                        //run a local http server on a seperate go routine on port 8080
+	openBrowser("http://127.0.0.1:8080")              //open a browser or tab automatically to go to the GUI
+	waitForQuit()                                     //block main goroutine from exiting until we've received a message from the quit channel.
 }
