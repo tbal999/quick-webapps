@@ -153,9 +153,10 @@ func waitForQuit() {
 		if isTrue { //if we receive 'true' down the channel...
 			fmt.Println("...Shutting down")
 			fmt.Println("Goodbye!")
-			return //if we get here, it will exit to the main goroutine and shut down the app
+			
 		}
 	}
+	//if we get here, it will exit to the main goroutine and shut down the app
 }
 
 //start up a HTTP server
