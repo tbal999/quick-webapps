@@ -1,5 +1,5 @@
 # quick webapps!
-Tiny webapp examples aimed at beginners to Go.
+Tiny webapp examples aimed at beginners to Go who want to move away from command line applications.
 
 I will use these as examples at the Brighton Gophers March meetup.
 
