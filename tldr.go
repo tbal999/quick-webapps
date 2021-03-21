@@ -31,7 +31,7 @@ var (
 		<br>
 		<textarea id="area" maxlength="7000" name="entertexthere" cols="50" rows="25" placeholder="content goes here">{{.Output}}</textarea>
 		<br>
-		<button type="submit" name="submit" value="submitquery">Submit</button><button type="submit" name="submit" value="exit">Exit</button>
+		<button type="submit" name="submit" value="doTLDRstuff">Submit</button><button type="submit" name="submit" value="exit">Exit</button>
 		</form>
 		</body>
 		</html>
@@ -57,12 +57,15 @@ func tealDeer(sentencecount int, input string) (paragraphs string, length int) {
 	return
 }
 
-//validate the user input in the forms on the web page
-func validate(r *http.Request, item string) bool {
-	if len(r.Form[item]) != 0 && r.Form[item][0] != "" {
-		return true
+//pass the form data to the tealDeer function.
+func passDataToTLDRfunc(sizestring, textstring string) {
+	size, _ := strconv.Atoi(sizestring) //if it's not a number just refresh page as var will just be 0
+	if size > 10 {                      //limit the size!
+		size = 10
 	}
-	return false
+	var contentlength int
+	pagevariables.Output, contentlength = tealDeer(size, textstring)                          //here we are creating the output using the tealDeer function
+	log.Printf("%d char input >> %d char output\n", contentlength, len(pagevariables.Output)) //log a text summary attempt
 }
 
 //collect data from the forms in the http request
@@ -75,15 +78,9 @@ func collectDataFromForms(r *http.Request) bool {
 		exit = true
 		pagevariables.Output = `GOODBYE!! Server will shut down... 
 you can close this window now!`
-	default: //there is only one other button so we can use default...
+	case "doTLDRstuff": //if you click on the 'doTLDRstuff' button?
 		if validate(r, "entertexthere") && validate(r, "size") { //if there's content in the text boxes...
-			size, _ := strconv.Atoi(string(r.Form["size"][0])) //if it's not a number just refresh page as var will just be 0
-			if size > 10 {                                     //limit the size!
-				size = 10
-			}
-			var contentlength int
-			pagevariables.Output, contentlength = tealDeer(size, r.Form["entertexthere"][0])
-			log.Printf("%d char input >> %d char output\n", contentlength, len(pagevariables.Output)) //log a text summary attempt
+			passDataToTLDRfunc(r.Form["size"][0], r.Form["entertexthere"][0]) //do the TLDR stuff
 		} else {
 			log.Print("? no content received") //log no content received
 		}
@@ -115,14 +112,43 @@ func startPage(w http.ResponseWriter, r *http.Request) {
 	}
 	err = t.Execute(w, pagevariables) //execute with pagevariables (will be blank at start)
 	if errorExists(err, "template execute error: ") {
-		quit <- true //if we pass true via the quit channel, it will cause the app to exit
+		quit <- true
+	}
+}
+
+//validate the user input in the forms on the web page
+func validate(r *http.Request, item string) bool {
+	/*
+		not too savvy with HTML myself - so i'm not sure why the form returns an array, and the data is always in the first index of that array.
+		if anybody knows why, feel free to let me know via tom@fern91.com - i would be grateful for the knowledge.
+	*/
+	if len(r.Form[item]) != 0 && r.Form[item][0] != "" { //if form is not blank & the first array item is not empty..
+		return true
+	}
+	return false
+}
+
+//if the error is not nil print error and handle it
+func errorExists(err error, str string) bool {
+	if err != nil {
+		log.Print(str, err) //output error for reference
+		return true
+	}
+	return false
+}
+
+//start up a HTTP server
+func startHTTPServer(port string) {
+	err := http.ListenAndServe(":"+port, nil) //setting up server on listening port
+	if errorExists(err, "http server error: ") {
+		quit <- true
 	}
 }
 
 //open up browser/tab dependent on your OS.
 func openBrowser(url string) {
 	var err error
-	switch runtime.GOOS {
+	switch runtime.GOOS { //open browser/tab dependent on what OS you are on
 	case "linux":
 		err = exec.Command("xdg-open", url).Start()
 	case "windows":
@@ -132,18 +158,9 @@ func openBrowser(url string) {
 	default:
 		err = fmt.Errorf("unsupported platform????")
 	}
-	if err != nil {
-		log.Print(err)
+	if errorExists(err, "browser opening error: ") {
+		quit <- true //if we pass true via the quit channel, it will cause the app to exit
 	}
-}
-
-//if the error is not nil print error and handle it
-func errorExists(err error, str string) bool {
-	if err != nil {
-		log.Print(str, err) //log it
-		return true
-	}
-	return false
 }
 
 //wait for the message from the quit channel
@@ -153,18 +170,10 @@ func waitForQuit() {
 		if isTrue { //if we receive 'true' down the channel...
 			fmt.Println("...Shutting down")
 			fmt.Println("Goodbye!")
-			
+
 		}
 	}
 	//if we get here, it will exit to the main goroutine and shut down the app
-}
-
-//start up a HTTP server
-func startHTTPServer(port string) {
-	err := http.ListenAndServe(":"+port, nil) //setting up server on listening port
-	if errorExists(err, "http server error: ") {
-		quit <- true
-	}
 }
 
 //main function
