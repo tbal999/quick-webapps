@@ -144,7 +144,8 @@ func bloopOutput() {
 	}
 }
 
-//collect data from the forms in the http request
+//collect data from the forms in the http request 
+//have a read through this function and figure out how it all works
 func collectDataFromForms(r *http.Request) bool {
 	var exit bool
 	r.ParseForm()                   //we parse the contents of the form
@@ -163,8 +164,8 @@ func collectDataFromForms(r *http.Request) bool {
 		} else {
 			reveseFormattedOutput()
 		}
-	case "nameandquestion": //if you click on the 'doTLDRstuff' button?
-		if validate(r, "name") { //if there's content in the text boxes...
+	case "nameandquestion": 
+		if validate(r, "name") { //if there's content in the boxes...
 			name := r.Form["name"][0]
 			switch r.Form["name"][0] {
 			case "filter":
