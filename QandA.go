@@ -1,7 +1,7 @@
 package main
 
 /*
-quick little 'Q&A' example app - will upload this to fern91.com so people can play around with it and ask questions etc if they want to.
+quick little 'Q&A' example app - will upload this to https://fern91.com/qna/ so people can play around with it and ask questions etc if they want to.
 */
 
 import (
