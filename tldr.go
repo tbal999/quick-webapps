@@ -12,6 +12,8 @@ import (
 	"github.com/JesusIslam/tldr" //Text summarizer for golang using LexRank by Andida Syahendar
 )
 
+//article test -> https://www.eatthis.com/news-looking-phone-while-walking/?utm_source=pocket-newtab-global-en-GB
+
 //variables for the home page
 var pagevariables = struct {
 	Output string
