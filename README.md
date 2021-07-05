@@ -1,7 +1,7 @@
 # quick webapps!
 Tiny webapp examples aimed at beginners to Go who want to move away from just building command line applications.
 
-https://www.youtube.com/watch?v=Vw-dNiUethY
+[Youtube Video](https://www.youtube.com/watch?v=Vw-dNiUethY)
 
 I will use these as examples at the Brighton Gophers March meetup.
 
